@@ -1,0 +1,50 @@
+#pragma once
+#include "types.h"
+#include "globals.h"
+
+const char* getUsername();
+const char* getOsName();
+void processAndGetDirectory(char *tr[], char *directories[], int *dirCount, int *showHidden, int *longFormat, int *showAccessTime, int *showLink);
+void aux_listFilesInDir(const char *DIRname, int lng, int acc, int lnk);
+void aux_printFileInfo(struct dirent *file, struct stat *st, int lng, int acc, int lnk);
+void aux_printDir(const char *dir, struct dirent *entry, int hid, int lng, int acc, int lnk);
+void aux_listDir(char *dir, int hid, int lng, int acc, int lnk, int rev);
+void aux_erase(char *tr[]);
+int aux_delrec(const char *dir);
+void aux_allocate_malloc(size_t size);
+void aux_allocate_nmap(char *archivo, char *tipo_apertura);
+void aux_allocate_shared(int key, size_t size);
+void aux_allocate_createshared(int key, size_t size);
+void aux_deallocate_malloc(size_t size);
+void aux_deallocate_mmap(const char *archivo);
+void aux_deallocate_shared(int clave);
+void aux_deallocate_delkey(int clave);
+void aux_deallocate_addr(memList *L, void *addr);
+void print_memory_line(unsigned char *ptr, int start, int max);
+void dump_memory(void *addr, size_t cont);
+int validate_input(void *addr, size_t cont);
+unsigned char parse_char(char *str);
+void fill_memory(void *addr, size_t cont, unsigned char ch);
+void aux_mem(char *tr[], bool dump);
+void aux_memory_vars();
+void aux_memory_blocks(memList *MEMLIST);
+void aux_memory_funcs();
+void aux_memory_all();
+void aux_memory_pmap();
+void aux_recurse(int n, int* static_arr);
+void aux_read(char *tr[]);
+void aux_write(char *tr[]);
+void aux_readFile(char *tr[]);
+void aux_writefile(const char *file, void *addr, size_t cont, int overwrite);
+int validateLogin(char *tr[], int login_mode);
+void isLoginCoolorNah(int login_mode, uid_t target_uid);
+void aux_setuid(char *tr[], int login_mode);
+void aux_showvar(char *var_name);
+int aux_changevar(char *var, char *val, int opt);
+int aux_subsvar(char *var1, char *var2, char *val);
+void aux_environ_print();
+void aux_environ_addr(int type);
+int aux_configurarEntorno(char *tr[], int *envCount);
+void aux_execProgram(char *program, char *args[], char *newEnv[]);
+void aux_waitForChild(pid_t pid);
+int aux_setChildPriority(int priority);
