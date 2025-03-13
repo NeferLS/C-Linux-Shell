@@ -101,6 +101,7 @@ void Cmd_back(char *tr[]);
 void Cmd_backpri(char *tr[]);
 void Cmd_listjobs();
 void Cmd_deljobs(char *tr[]);
+void clearLine(int len);
 void DoCommand(char *tr[]);
 int funcBreakLine(char *line, char *pz[]);
 

@@ -71,7 +71,7 @@ void Cmd_date(char *tr[]) {
     } else if (strcmp(tr[0], "-t") == 0) { // time
         printf("%02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
     } else { 
-        printf("sso: el argumento para 'date' no es válido. Intente (-d)(-t) \n");
+        printf("Invalid argument for <date>");
     }
 }
 
@@ -132,7 +132,7 @@ void Cmd_open(char *tr[]) {
     }
 
     if (tr[1] == NULL) {
-        printf("Error: No mode access was assigned. Use 'help' for more information.\n");
+        printf("Error: No access mode was assigned. Use 'help' for more information.\n");
         return;
     }
 
@@ -317,7 +317,7 @@ void Cmd_revlist(char *tr[]){
     char *dirNum[100];
     int dirCount = 0;
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("uso: revlist [-hid][-long] [-link] [-acc]\n");
+        printf("use: revlist [-hid][-long][-link][-acc]\n");
         return;
     }
     processAndGetDirectory(tr, dirNum, &dirCount, &hid, &lng, &acc, &lnk);
@@ -330,7 +330,7 @@ void Cmd_revlist(char *tr[]){
 // deletes an empty dir
 void Cmd_erase(char *tr[]){
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("uso: erase [archivo, directorio]\n");
+        printf("use: erase [file, dir]\n");
         return;
     }
     aux_erase(tr);
@@ -339,7 +339,7 @@ void Cmd_erase(char *tr[]){
 // deletes dir recursively
 void Cmd_delrec(char *tr[]){
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("uso: delrec [directorio]\n");
+        printf("use: delrec [directorio]\n");
         return;
     }
     aux_delrec(tr[0]);
@@ -370,7 +370,7 @@ void Cmd_deallocate(char *tr[]){
         aux_memory_blocks(&MEMLIST);
         return;
     } else if(strcmp(tr[0], "-?") == 0){
-        printf("uso: allocate [-malloc, size] [-mmap, archivo, tipo_apertura] [-shared, num_clave, size]\n");
+        printf("use: allocate [-malloc, size] [-mmap, archivo, tipo_apertura] [-shared, num_clave, size]\n");
         return;
     }else if (strcmp(tr[0], "-malloc") == 0 && tr[1]!=NULL) {
         aux_deallocate_malloc((size_t)atoll(tr[1])); 
@@ -389,7 +389,7 @@ void Cmd_deallocate(char *tr[]){
 
 void Cmd_memfill(char *tr[]){
     if(tr[0]==NULL||tr[1]==NULL||tr[2]==NULL){
-        fprintf(stderr, "uso: memfill [addr] [cont] [ch]\n");
+        fprintf(stderr, "use: memfill [addr] [cont] [ch]\n");
         return;
     }
     
@@ -398,7 +398,7 @@ void Cmd_memfill(char *tr[]){
 
 void Cmd_memdump(char *tr[]){
     if(tr[0]==NULL||tr[1]==NULL){
-        fprintf(stderr, "uso: memdummp [addr] [cont]\n");
+        fprintf(stderr, "use: memdummp [addr] [cont]\n");
         return;
     }
     aux_mem(tr, true);
@@ -409,7 +409,7 @@ void Cmd_memory(char *tr[]){
         aux_memory_all(); 
         return;
     } else if ((strcmp(tr[0], "-?") == 0)){
-        printf("uso: memory [-funcs] [-vars] [-blocks], [-all], [-pmamp]\n");
+        printf("use: memory [-funcs] [-vars] [-blocks], [-all], [-pmamp]\n");
         return;
     } else if (strcmp(tr[0], "-funcs") == 0) {
         aux_memory_funcs();
@@ -426,7 +426,7 @@ void Cmd_memory(char *tr[]){
 
 void Cmd_read(char *tr[]){
     if(tr[0]==NULL || tr[1]==NULL || tr[2]==NULL || (strcmp(tr[0], "-?") == 0)){
-        fprintf(stderr, "uso: read [archivo] [direccion_memoria] [num_bytes]\n");
+        fprintf(stderr, "uso: read [file][memAddrs][nBytes]\n");
         return;
     }
     aux_read(tr);
@@ -434,7 +434,7 @@ void Cmd_read(char *tr[]){
 
 void Cmd_readfile(char *tr[]) {
     if (tr[0] == NULL || tr[1] == NULL || tr[2] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("uso: readfile <nombre_archivo> <dirección> <número_bytes>\n");
+        printf("use: readfile [file name][memAddrs][nBytes]n");
         return;
     }
     aux_readFile(tr);
@@ -443,7 +443,7 @@ void Cmd_readfile(char *tr[]) {
 void Cmd_write(char *tr[]){
     if (tr[0] == NULL || tr[1] == NULL || tr[2] == NULL
         ||(strcmp(tr[0],"-o")==0 && tr[3]==NULL)){
-         fprintf(stderr, "Uso: write[-o] <fd> <direccion_memoria> <tamano>\n");
+         fprintf(stderr, "use: write[-o][fd][memAddrs][size]\n");
         return;
     }
     aux_write(tr);
@@ -452,7 +452,7 @@ void Cmd_write(char *tr[]){
 void Cmd_writefile(char *tr[]) {
     if (tr[0] == NULL || tr[1] == NULL || tr[2] == NULL
         ||(strcmp(tr[0],"-o")==0 && tr[3]==NULL)){
-         fprintf(stderr, "Uso: writefile [-o] <archivo> <direccion_memoria> <tamano>\n");
+         fprintf(stderr, "use: writefile[-o][file][memAddrs][size]\n");
         return;
     }
 
@@ -468,20 +468,20 @@ void Cmd_writefile(char *tr[]) {
     const char *file=tr[argIndex];
 
     if(file==NULL){
-        fprintf(stderr, "Error: archivo no especificado.\n");
+        fprintf(stderr, "Error: file not specified.\n");
         return;
     }
     
     char *endPtr;
     void *addr=(void *)strtoul(tr[1+argIndex],&endPtr,16);
     if(*endPtr!='\0'){
-        fprintf(stderr, "Error: dirección de memoria '%s' inválida.\n", tr[argIndex + 1]);
+        fprintf(stderr, "Error: memory address '%s' not valid.\n", tr[argIndex + 1]);
         return;
     }
 
     size_t cont= (size_t)strtoul(tr[2+argIndex],&endPtr,10);
     if (*endPtr != '\0' || cont == 0) {
-        fprintf(stderr, "Error: tamaño '%s' inválido.\n", tr[argIndex + 2]);
+        fprintf(stderr, "Error: size '%s' not valid.\n", tr[argIndex + 2]);
         return;
     }
 
@@ -490,13 +490,13 @@ void Cmd_writefile(char *tr[]) {
 
 void Cmd_recurse(char *tr[]){
     if(tr[0]==NULL || (strcmp(tr[0], "-?") == 0)){
-        fprintf(stderr, "Uso: recurse [n] donde n es el número de invocaciones recursivas.\n");
+        fprintf(stderr, "use: recurse [n]\n");
         return;
     }
 
     int n=atoi(tr[0]);
     if(n<=0){
-        fprintf(stderr, "Error: El número de invocaciones debe ser mayor que 0.\n");
+        fprintf(stderr, "Error: n should be bigger than 0.\n");
         return;
     }
 
@@ -516,11 +516,11 @@ void Cmd_getuid(char *tr[]) {
 
 void Cmd_setuid(char *tr[]) {
     if (tr[0] == NULL || strcmp(tr[0], "-?") == 0) {
-        fprintf(stderr, "uso: setuid [-l] uid\n");
+        fprintf(stderr, "use: setuid [-l][uid]\n");
         return;
     }
     if (tr[1] != NULL && (strcmp(tr[1], "-l") == 0 || strcmp(tr[1], "-L") == 0)) {
-        printf("Modo login detectado (-l).\n");
+        printf("Login mode detected (-l).\n");
         aux_setuid(tr +1 , 1);
     } else {
         aux_setuid(tr, 0);
@@ -531,7 +531,7 @@ void Cmd_showvar(char *tr[]) {
     int i;
     
     if (tr[0] == NULL) {
-        fprintf(stderr, "uso: showvar var1 var2 ...\n");
+        fprintf(stderr, "use: showvar var1 var2 ...\n");
         return;
     }
     
@@ -888,6 +888,10 @@ void Cmd_external(char *tr[]) {
     }
 }
 
+void clearLine(int len) {
+    printf("\r%*s\r", len, "");
+}
+
 
 // definición del array de comandos
 // si ponemos lo que hay en "", vamos a la funcion correspondiente
@@ -965,7 +969,7 @@ void DoCommand(char *tr[]) {
             return;
         } 
     }
-    printf("sso: comando no encontrado: %s \n", tr[0]);//
+    printf("sso: command not found: %s \n", tr[0]);//
 }
 
 int funcBreakLine(char *line, char *pz[]) {

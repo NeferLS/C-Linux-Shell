@@ -362,7 +362,7 @@ void aux_allocate_nmap(char *archivo, char *tipo_apertura) {
     }
     dir = mapearFichero(archivo, protection);
 
-    printf("Fichero %s mapeado en %p\n", archivo, dir);
+    printf("Filed %s mapped in %p\n", archivo, dir);
 
     MemoryBlock block = {
         .address = dir,

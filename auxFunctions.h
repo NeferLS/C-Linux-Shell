@@ -48,3 +48,4 @@ int aux_configurarEntorno(char *tr[], int *envCount);
 void aux_execProgram(char *program, char *args[], char *newEnv[]);
 void aux_waitForChild(pid_t pid);
 int aux_setChildPriority(int priority);
+int readKey();

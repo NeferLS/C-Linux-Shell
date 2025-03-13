@@ -11,29 +11,24 @@ bool isEmptyHistoricList(hList L){
 }
 
 //inserta un elemento al historial
-void insertHistoricItem(hList *L, const char tr[]){
 
+void insertHistoricItem(hList *L, const char tr[]) {
     hNode *newNode = (hNode *)malloc(sizeof(hNode));
     
-    if (newNode == NULL)
-    {
+    if (newNode == NULL) {
         printf("Error al asignar memoria.\n");
         return;
     }
     
-    //crear el nodo si hay espacio
-    strncpy(newNode->cmd,tr,MAX_COMM);
+    strncpy(newNode->cmd, tr, MAX_COMM);
     newNode->next = NULL;
-    newNode->nm = L->nm_elements+1;
+    newNode->nm = L->nm_elements + 1;
 
-    //comprueba que la lista esta vacia o no
-    if (L->head==NULL)
-    {
+    if (L->head == NULL) {
         L->head = newNode;
-    } else{
+    } else {
         hPosL p = L->head;
-        while (p->next != NULL)
-        {
+        while (p->next != NULL) {
             p = p->next;
         }
         p->next = newNode;
@@ -127,3 +122,34 @@ char* getHistoricItem(hList *L, int N) {
     return NULL;
 }
 
+void initHistoryNav(HistoryNav *nav, hList *L){
+    nav->history = L;
+    nav->currentPos = -1; //not navegating yet
+    nav->lastCommand = L->nm_elements -1;
+}
+
+char *navUp(HistoryNav *nav){
+    if(nav->currentPos == -1){
+        nav->currentPos = nav->lastCommand;
+    } 
+    if(nav->currentPos > 0){
+        nav->currentPos--;
+    }
+    return getHistoricItem(nav->history, nav->currentPos);
+}
+
+char *navDown(HistoryNav *nav){
+    if(nav->currentPos == -1 || nav->currentPos == nav->lastCommand){
+        nav->currentPos = -1;
+        return NULL;
+    } 
+    else{
+       nav->currentPos++;
+       return getHistoricItem(nav->history, nav->currentPos); 
+    }
+}
+
+void resetNav(HistoryNav *nav){
+    nav->currentPos = -1;
+    nav->lastCommand = nav->history->nm_elements -1;
+}

@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <limits.h>
 #include <sys/resource.h>
+#include <termios.h>
 
 #define MAX_COMM 2040 
 #define MAX_SIZE 2040 
@@ -58,3 +59,11 @@
 #else
     #define PLATFORM_NAME NULL
 #endif
+
+// def keys
+
+#define k_Up 65
+#define k_Dn 66
+#define k_Ri 67
+#define k_Le 68
+#define k_Esc 27

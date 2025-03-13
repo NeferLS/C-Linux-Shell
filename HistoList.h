@@ -13,6 +13,11 @@ typedef struct {
     int nm_elements;
 }hList;
 
+typedef struct {
+    hList* history;
+    int currentPos;
+    int lastCommand;
+} HistoryNav;
 
 void initHistoricList(hList *L);
 bool isEmptyHistoricList(hList L);
@@ -21,5 +26,9 @@ void removeHistoricItem(hList *L);
 void clearHistoricList(hList *L);
 void printHistoricList(hList *L, int N);
 char* getHistoricItem(hList *, int N);
+void initHistoryNav(HistoryNav *nav, hList *L);
+char *navUp(HistoryNav *nav);
+char *navDown(HistoryNav *nav);
+void resetNav(HistoryNav *nav);
 
 
