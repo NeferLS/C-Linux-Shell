@@ -71,7 +71,7 @@ void Cmd_date(char *tr[]) {
     } else if (strcmp(tr[0], "-t") == 0) { // time
         printf("%02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
     } else { 
-        printf("Invalid argument for <date>");
+        printf("Invalid argument for <date>\n");
     }
 }
 
@@ -95,7 +95,7 @@ void Cmd_history(char *tr[]){
             printf("\nShowing the last %d commands of the list\n", N);
             printHistoricList(&HIS, -N); 
         } else { 
-            perror("Invalid argument for 'historic' ");
+            perror("Invalid argument for 'historic' \n");
         }
     }
 }
@@ -426,7 +426,7 @@ void Cmd_memory(char *tr[]){
 
 void Cmd_read(char *tr[]){
     if(tr[0]==NULL || tr[1]==NULL || tr[2]==NULL || (strcmp(tr[0], "-?") == 0)){
-        fprintf(stderr, "uso: read [file][memAddrs][nBytes]\n");
+        fprintf(stderr, "uso: read [df][memAddrs][nBytes]\n");
         return;
     }
     aux_read(tr);
@@ -434,7 +434,7 @@ void Cmd_read(char *tr[]){
 
 void Cmd_readfile(char *tr[]) {
     if (tr[0] == NULL || tr[1] == NULL || tr[2] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("use: readfile [file name][memAddrs][nBytes]n");
+        printf("use: readfile [file name][memAddrs][nBytes]\n");
         return;
     }
     aux_readFile(tr);
@@ -531,7 +531,7 @@ void Cmd_showvar(char *tr[]) {
     int i;
     
     if (tr[0] == NULL) {
-        fprintf(stderr, "use: showvar var1 var2 ...\n");
+        fprintf(stderr, "use: showvar [var1][var2] ...\n");
         return;
     }
     
@@ -545,7 +545,7 @@ void Cmd_changevar(char *tr[]) {
     int opt = 0; // 0: setenv, 1: putenv
 
     if (tr[0] == NULL || tr[1] == NULL || (strcmp(tr[0], "-p") == 0 && tr[2] == NULL)) {
-        fprintf(stderr, "uso: changevar [-a|-e|-p] var valor\n");
+        fprintf(stderr, "use: changevar [-a|-e|-p][var][value]\n");
         return;
     }
 
@@ -562,7 +562,7 @@ void Cmd_changevar(char *tr[]) {
     }
 
     if (aux_changevar(var, val, opt) != 0) {
-        perror("Error al cambiar la variable de entorno");
+        perror("Error trying to change the environ var");
     }
 }
 
@@ -570,7 +570,7 @@ void Cmd_subsvar(char *tr[]) {
     char *var1, *var2, *val;
 
     if (tr[0] == NULL || tr[1] == NULL || tr[2] == NULL) {
-        fprintf(stderr, "uso: subsvar [-a|-e] var1 var2 valor\n");
+        fprintf(stderr, "use: subsvar [-a|-e][var1][var2][value]\n");
         return;
     }
 
@@ -585,12 +585,12 @@ void Cmd_subsvar(char *tr[]) {
     }
 
     if (aux_subsvar(var1, var2, val) != 0) {
-        perror("Error al sustituir la variable de entorno");
+        perror("Error trying to substitute the environ var");
         return;
     }
 
-    printf("Variable %s eliminada\n", var1);
-    printf("Variable %s creada con valor %s\n", var2, val);
+    printf("var %s deleted\n", var1);
+    printf("var %s created with value %s\n", var2, val);
 }
 
 void Cmd_environ(char *tr[]) {
@@ -607,7 +607,7 @@ void Cmd_fork(char *tr[]){
     pid_t pid;
 
     if((pid=fork())==0){
-        printf("Ejecutando proceso %d\n", getpid());
+        printf("Executing process %d...\n", getpid());
     } else if(pid != -1){
         waitpid(pid, NULL, 0);
     }
@@ -620,29 +620,29 @@ void Cmd_search(char *tr[]){
         addDir(&DIRLIST, tr[1]);
     } else if (strcmp(tr[0], "-del") == 0 && tr[1] != NULL) {
         if (deleteDir(&DIRLIST, tr[1])) {
-            printf("Directorio eliminado: %s\n", tr[1]);
+            printf("Directory succesfully deleted: %s\n", tr[1]);
         } else {
-            printf("El directorio %s no está en la lista.\n", tr[1]);
+            printf("Directory %s is not on the list.\n", tr[1]);
         }
     } else if (strcmp(tr[0], "-clear") == 0) {
         clearDirList(&DIRLIST);
-        printf("Lista de búsqueda vaciada.\n");
+        printf("Search list successfully emptied.\n");
     } else if (strcmp(tr[0], "-path") == 0) {
         importPath(&DIRLIST);
-        printf("Directorios importados desde PATH.\n");
+        printf("Directories imported from PATH\n");
     } else {
-        printf("Uso: search [-add dir] [-del dir] [-clear] [-path]\n");
+        printf("use: search [-add dir][-del dir][-clear][-path]\n");
     }
 }
 
 void Cmd_exec(char *tr[]){
     if (tr[0] == NULL) {
-        fprintf(stderr, "Error: No se ha especificado programa a ejecutar\n");
+        fprintf(stderr, "error: a program has not been selected\n");
         return;
     }
 
     if (tr[0][0] == '-') {
-        fprintf(stderr, "Error: Opción no válida para exec. Uso: exec progspec [args...]\n");
+        fprintf(stderr, "use: exec progspec [args...]\n");
         return;
     }
     char *program=NULL;
@@ -659,13 +659,13 @@ void Cmd_exec(char *tr[]){
     }
 
     if(program==NULL){
-        fprintf(stderr,"Error: No se ha especificado programa a ejecutar\n");
+        fprintf(stderr,"error: a program has not been selected for execution\n");
         return;
     }
     if(envCount>0){
         newEnv=malloc((envCount+1)*sizeof(char *));
         if (newEnv == NULL) {
-            perror("Error al asignar memoria para el entorno");
+            perror("Address memory assignation error. ");
             return;
         }
         int index=0;
@@ -680,33 +680,33 @@ void Cmd_exec(char *tr[]){
 
 void Cmd_execpri(char *tr[]){
     if (tr[0] == NULL || tr[1] == NULL) {
-        fprintf(stderr, "Uso: execpri prio progspec [args...]\n");
+        fprintf(stderr, "use: execpri prio progspec [args...]\n");
         return;
     }
     char *endptr;
-    int priority = strtol(tr[0], &endptr, 10); // Base 10
+    int priority = strtol(tr[0], &endptr, 10); // b10
     if (*endptr != '\0') {
-        fprintf(stderr, "Error: La prioridad debe ser un número entero.\n");
+        fprintf(stderr, "error: priority has to be an integer\n");
         return;
     }
 
     if (priority < -20 || priority > 19) {
-        fprintf(stderr, "Error: La prioridad debe estar entre -20 y 19.\n");
+        fprintf(stderr, "error: priority has to be an integer from [-20,19]\n");
         return;
     }
 
     if (priority < 0 && getuid() != 0) {
-        fprintf(stderr, "Error: Las prioridades negativas requieren permisos de administrador.\n");
+        fprintf(stderr, "error: admin privileges are needed for negative priorities\n");
         return;
     }
 
-    // Cambiar prioridad
+    // change prio
     if (setpriority(PRIO_PROCESS, getpid(), priority) == -1) {
-        fprintf(stderr, "Error al cambiar la prioridad: %s\n", strerror(errno));
+        fprintf(stderr, "Error changing priority: %s\n", strerror(errno));
         return;
     }
 
-    // Identificar variables de entorno y el programa
+    // identify environ var and program
     char *program = NULL;
     char **newEnv = NULL;
     int envCount = 0;
@@ -721,7 +721,7 @@ void Cmd_execpri(char *tr[]){
     }
 
     if (program == NULL) {
-        fprintf(stderr, "Error: No se ha especificado un programa a ejecutar.\n");
+        fprintf(stderr, "error: No se ha especificado un programa a ejecutar.\n");
         return;
     }
 
@@ -995,7 +995,7 @@ int main(int argc, char *argv[]) {
     const char *username = getUsername();
     const char *osname = getOsName();
     while (1) {
-        printf("%s@%s-%s >> ", username, username, osname);
+        printf("%s@%s-%s:~ ", username, username, osname);
         fgets(line, MAX_COMM, stdin);
         if (funcBreakLine(line, pcs) == 0) { 
             continue;
