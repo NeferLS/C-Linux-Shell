@@ -24,7 +24,7 @@
 
 #define MAX_COMM 2040 
 #define MAX_SIZE 2040 
-#define MAX_OPEN_FILES 10 // por limitar
+#define MAX_OPEN_FILES 10 //can change
 
 #if defined(_WIN32)
     #define PLATFORM_NAME "Windows" // Windows
@@ -59,11 +59,3 @@
 #else
     #define PLATFORM_NAME NULL
 #endif
-
-// def keys
-
-#define k_Up 65
-#define k_Dn 66
-#define k_Ri 67
-#define k_Le 68
-#define k_Esc 27

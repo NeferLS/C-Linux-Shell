@@ -8,7 +8,7 @@ Repository for a version of the Linux terminal shell, with commands and explanat
 
 ## Things to add
 
-- ls as a easy concept
+- ls (V)
 - nmap (simple version)
 
 ## Revision

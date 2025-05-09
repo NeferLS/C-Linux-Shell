@@ -4,10 +4,10 @@ typedef char command[MAX_COMM];
 
 struct CMD {
     char *name;
-    void (*function)(char **);  // Puntero a función
+    void (*function)(char **);  // points to function
 };
 
-char *comandos[] = {
+char *cmds[] = {
     "whoisme            - Prints the user and system info",
     "pid                - Prints the PID of the process running the shell.",
     "ppid               - Prints the PPID of the process running the shell.",

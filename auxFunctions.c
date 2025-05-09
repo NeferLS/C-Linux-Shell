@@ -25,14 +25,15 @@ const char* getOsName(){
     return (PLATFORM_NAME == NULL) ? "" : PLATFORM_NAME;
 }
 
+//checks type of process
 void typeOfProcess(char *tr[], char *directories[], int *dirCount, int *showHidden, int *longFormat, int *showAccessTime, int *showLink){
     int i = 0;
     for (; tr[i] != NULL; i++) {
         if (tr[i][0] == '-') {
-            if (strcmp(tr[i], "-hid") == 0) { if (showHidden != NULL) *showHidden = 1;
-            } else if (strcmp(tr[i], "-long") == 0) { if (longFormat != NULL) *longFormat = 1;
-            } else if (strcmp(tr[i], "-acc") == 0) { if (showAccessTime != NULL) *showAccessTime = 1;
-            } else if (strcmp(tr[i], "-link") == 0) { if (showLink != NULL) *showLink = 1;
+            if (strcmp(tr[i], "-h") == 0) { if (showHidden != NULL) *showHidden = 1;
+            } else if (strcmp(tr[i], "-l") == 0) { if (longFormat != NULL) *longFormat = 1;
+            } else if (strcmp(tr[i], "-a") == 0) { if (showAccessTime != NULL) *showAccessTime = 1;
+            } else if (strcmp(tr[i], "-ln") == 0) { if (showLink != NULL) *showLink = 1;
             } else {
                 return;
             }
@@ -95,6 +96,7 @@ void getLink(struct dirent *file, struct stat *st, int lnk){
         }
     }
 }
+
 void getOwner(struct stat *st){
     struct passwd *pwd = getpwuid(st->st_uid);
     printf("%s\t", pwd ? pwd->pw_name : "???");
@@ -126,7 +128,7 @@ void aux_listFilesInDir(const char *DIRname, int lng, int acc, int lnk){
     char buffer[512];
 
     if (cdir == NULL) {
-        printf("sso: No se pudo abrir el directorio %s\n", DIRname);
+        fprintf(stderr, "Couldn't open dir.");
         return;
     }
     while ((cfile = readdir(cdir)) != NULL) {
@@ -142,7 +144,7 @@ void aux_printDir(const char *dir, struct dirent *entry, int hid, int lng, int a
     if (!hid && entry->d_name[0] == '.') {
         return;
     }
-    // solo nombre si no hay long
+    // printing
     if (!lng) {
         printf("%s\n", entry->d_name);
     } else {
@@ -164,16 +166,16 @@ void aux_printDir(const char *dir, struct dirent *entry, int hid, int lng, int a
         }
         strftime(timebuf, sizeof(timebuf), "%Y/%m/%d %H:%M:%S", tm_info);
 
-        // nombre, grupo
+        // name, group
         getOwner(&st);
         getGroup(&st);
-        // con nlink
+        // nlink
         printf("%s   %u (%8ld)", timebuf, (unsigned)st.st_nlink, (long)st.st_ino);
         //long
         getLong(&st, lng);
         //size
         getBlockSize(&st);
-        // nombre
+        // na,e
         printf(" %s", entry->d_name);
         // link
         getLink(entry, &st, lnk);
@@ -181,17 +183,16 @@ void aux_printDir(const char *dir, struct dirent *entry, int hid, int lng, int a
     }
 }
 
-
 void recList(const char *dirPath, int hid, int lng, int acc, int lnk,
             DIR *auxdir, struct dirent *entry){
     
     printf("************%s\n", dirPath);
-    // dentro del dir
+    // inside dir
     while (entry != NULL) {
         char size[1024];
         snprintf(size, sizeof(size), "%s/%s", dirPath, entry->d_name);
         aux_printDir(dirPath, entry, hid, lng, acc, lnk);
-        // recursivo
+        // recursive
         if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             recList(size, hid, lng, acc, lnk, auxdir, entry);
         }
@@ -211,13 +212,13 @@ void revList(const char *dirPath, int hid, int lng, int acc, int lnk,
 void aux_listDir(const char *dirPath, int hid, int lng, int acc, int lnk, int rev) {
     DIR *auxdir;
     struct dirent *entry;
-    // abrir directorio
+
     if ((auxdir = opendir(dirPath)) == NULL) {  
         perror("opendir");
         return;
     }   
     entry = readdir(auxdir);
-    // 0 es reclist, imprimimos directorio. 1 revlis, mostramos dir despues subdir
+
     if (!rev){
         recList(dirPath, hid, lng, acc, lnk, auxdir, entry);
     } else
@@ -233,9 +234,9 @@ void removeArchive(char *tr[],struct stat *st){
             continue;
         }
         if(unlink(tr[i])==0){
-            printf("Archivo eliminado %s\n",tr[i]);
+            printf("File with nlink %s successfully deleted\n",tr[i]);
         }else{
-            perror("Error al eliminar archivo");
+            perror("Couldn't delete file.");
         }
     }
 }
@@ -247,9 +248,9 @@ void removeDir(char *tr[], struct stat *st){
             continue;
         }
         if(rmdir(tr[i])==0){
-            printf("Directorio eliminado: %s\n",tr[i]);
+            printf("Dir %s successfully deleted.\n",tr[i]);
         }else{
-            perror("Error al eliminar directorio (posiblemente no vacio)");
+            perror("Couldn't delete dir.");
         }
     }
 }
@@ -992,4 +993,47 @@ int aux_setChildPriority(int priority) {
         return -1; // error
     }
     return 0; // exito
+}
+
+void aux_isPrioOkay(char *endptr, int prio){
+    if (*endptr != '\0') {
+        fprintf(stderr, "Error: Priority can only be an integer value.\n");
+        return;
+    }
+
+    if (prio < -20 || prio >19){
+        fprintf(stderr, "Error: Priority can only be between [-20,19].\n");
+        return;
+    }    
+}
+
+void aux_IfcreateEnv(char* tr[],char** argv, char*** newEnv, int envCnt){
+    for (int i = 1; tr[i] != NULL; i++) {
+        if (strchr(tr[i], '=') == NULL && getenv(tr[i]) != NULL) {
+            envCnt++;
+        } else {
+            *argv = tr[i];
+            break;
+        }
+    }
+
+    if (*argv == NULL) {
+        fprintf(stderr, "Error: A process to run has not been specified.\n");
+        return;
+    }
+
+    // create env if necessary 
+    if (envCnt > 0) {
+        *newEnv = malloc((envCnt + 1) * sizeof(char *));
+        if (*newEnv == NULL) {
+            perror("Couldn't assign memory to the process\n");
+            return;
+        }
+        int index = 0;
+        for (int i = 1; tr[i] != NULL && index < envCnt; i++) {
+            if (getenv(tr[i]) != NULL)
+                (*newEnv)[index++] = strdup(tr[i]);
+        }
+        (*newEnv)[index] = NULL;
+    }
 }

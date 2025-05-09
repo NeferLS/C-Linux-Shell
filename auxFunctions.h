@@ -50,3 +50,4 @@ void aux_waitForChild(pid_t pid);
 int aux_setChildPriority(int priority);
 int readKey();
 void aux_isPrioOkay(char *endptr, int prio);
+void aux_IfcreateEnv(char* tr[],char* argv, char** newEnv, int envCnt);

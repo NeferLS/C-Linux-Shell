@@ -1,6 +1,6 @@
 #include "HistoList.h"
 
-// creamos una lista vacia
+// functions of creation
 void initHistoricList(hList *L){
     L->head = NULL;
     L->nm_elements = 0;
@@ -10,13 +10,12 @@ bool isEmptyHistoricList(hList L){
     return L.head == NULL;
 }
 
-//inserta un elemento al historial
-
+// inserts element
 void insertHistoricItem(hList *L, const char tr[]) {
-    hNode *newNode = (hNode *)malloc(sizeof(hNode));
+    hNode *newNode = (hNode*)malloc(sizeof(hNode));
     
     if (newNode == NULL) {
-        printf("Error al asignar memoria.\n");
+        fprintf(stderr, "Error: Couldn't assign command to historic list.\n");
         return;
     }
     
@@ -36,21 +35,19 @@ void insertHistoricItem(hList *L, const char tr[]) {
     L->nm_elements++;
 }
 
-// elimina un elemento del historial
+// deletes
 void removeHistoricItem(hList *L){
-    
-    //si no esta vacia
     hPosL p = L->head;
     L->head = L->head->next;
     free(p);
     L->nm_elements--;;
 }
 
-// elimina el historial
+// clears historic 
 void clearHistoricList(hList *L){
     if (L->head ==NULL)
     {
-        printf("No hay elementos que eliminar en el historial\n");
+        fprintf(stderr, "No elements to delete on historic list.\n");
         return;
     }
 
@@ -66,22 +63,22 @@ void clearHistoricList(hList *L){
     L->nm_elements = 0;
 }
 
-// imprime el historial
+// prints historic
 void printHistoricList(hList *L, int N) {
-    if (L->head == NULL) { // si no hay
-        printf("No hay elementos que mostrar en la lista\n");
+    if (L->head == NULL) { 
+        fprintf(stderr, "No elements to delete on historic list.\n");
         return;
     }
     hPosL p = L->head;
-    if (N == 0) { // si solo ponemos historic
-        printf("Imprimiendo todo el historial de comandos\n");
+    if (N == 0) { // only historic
+        printf("Printing historic list of commands.\n");
         while (p != NULL) {
             printf("%d. %s\n", p->nm, p->cmd);
             p = p->next;
         }
-    } else if (N > 0) { // si ponemos historic N
-        if (N > L->nm_elements) { // si ponemos un numero mas grande del numero de elementos
-            printf("Error: No hay suficiente historial. Solo hay %d comandos en el historial.\n", L->nm_elements);
+    } else if (N > 0) { // historic + N 
+        if (N > L->nm_elements) { 
+            fprintf(stderr, "Error: number of elements out of bounce. There are only %d elements at the moment.\n", L->nm_elements);
             return;
         }
         while (p != NULL) {
@@ -92,13 +89,13 @@ void printHistoricList(hList *L, int N) {
             p = p->next;
         }
     } else if (N < 0) {
-        N = -N; // si ponemos historic -N
-        if (N > L->nm_elements) { // si ponemos un numero mas grande del numero de elementos
-            printf("Error: Solo hay %d comandos en el historial. No se pueden mostrar los últimos %d.\n", L->nm_elements, N);
+        N = -N; // historic + -N
+        if (N > L->nm_elements) { 
+            fprintf(stderr, "Error: number of elements out of bounce. There are only %d elements at the moment.\n", L->nm_elements);
             return;
         }
-        int first_to_print = L->nm_elements - N + 1; // si no, imprimimos los ultimos N comandos
-        printf("Imprimiendo los últimos %d comandos:\n", N);
+        int first_to_print = L->nm_elements - N + 1; 
+        printf("Printing the last %d commands:\n", N);
         while (p != NULL) {
             if (p->nm >= first_to_print) {
                 printf("%d. %s\n", p->nm, p->cmd);
@@ -108,7 +105,7 @@ void printHistoricList(hList *L, int N) {
     }
 }
 
-//consigue un item del historial a traves de su numero
+// gets historic item by number
 char* getHistoricItem(hList *L, int N) {
     hPosL p = L->head;
     int count = 1;
@@ -122,6 +119,7 @@ char* getHistoricItem(hList *L, int N) {
     return NULL;
 }
 
+// navigation functions
 void initHistoryNav(HistoryNav *nav, hList *L){
     nav->history = L;
     nav->currentPos = -1; //not navegating yet

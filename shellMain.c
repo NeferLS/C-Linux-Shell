@@ -54,6 +54,7 @@ void Cmd_chdir(char *tr[]) {
     }
 }
 
+// self explanatory
 void Cmd_exit(char *tr[]) {
         exit(0);
 }
@@ -64,14 +65,14 @@ void Cmd_date(char *tr[]) {
     struct tm *local = localtime(&now);
 
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)){
-        printf("use: date [-d(ate)][-t(ime)]\n");
+        fprintf(stderr, "use: date [-d(ate)][-t(ime)]\n");
         return;
     } else if (strcmp(tr[0], "-d") == 0) { // date
         printf("%02d/%02d/%d\n", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
     } else if (strcmp(tr[0], "-t") == 0) { // time
         printf("%02d:%02d:%02d\n", local->tm_hour, local->tm_min, local->tm_sec);
     } else { 
-        printf("Invalid argument for <date>\n");
+        fprintf(stderr, "Error: Invalid argument.");
     }
 }
 
@@ -85,14 +86,14 @@ void Cmd_history(char *tr[]){
         if (N > 0) { //case historic N
             char *command = getHistoricItem(&HIS, N); 
             if (command != NULL) { 
-                printf("Repeats the command number... %d from the list: %s\n", N, command);
+                printf("Repeating the command number... %d from the list: %s\n", N, command);
                 char *args[MAX_COMM / 2];
                 funcBreakLine(command, args);  
                 DoCommand(args); 
             }
         } else if (N < 0) { //case historic -N
             N = -N;  
-            printf("\nShowing the last %d commands of the list\n", N);
+            printf("Showing the last %d commands of the list\n", N);
             printHistoricList(&HIS, -N); 
         } else { 
             perror("Invalid argument for 'historic' \n");
@@ -100,25 +101,26 @@ void Cmd_history(char *tr[]){
     }
 }
 
-
+// help command, lists commands
 void Cmd_help(char *tr[]) {
     if (tr == NULL || tr[0] == NULL) {
-        for (int i = 0; comandos[i] != NULL; i++) {
-            printf(" - %s\n", comandos[i]);
+        for (int i = 0; cmds[i] != NULL; i++) {
+            printf(" - %s\n", cmds[i]);
         }
         return;
     }
     if((strcmp(tr[0], "-?") == 0)){
-        printf("use: help [command]\n");
+        fprintf(stderr, "use: help [command]\n");
         return;
     }
-    for (int i = 0; comandos[i] != NULL; i++) {
-        if (strstr(comandos[i], tr[0]) != NULL) {
-            printf("%s\n", comandos[i]);
+    for (int i = 0; cmds[i] != NULL; i++) {
+        if (strstr(cmds[i], tr[0]) != NULL) {
+            printf("%s\n", cmds[i]);
             return;
         }
     }
-    printf("Command '%s' no found. Use 'help' to see the available commands.\n", tr[0]);
+    fprintf(stderr, "Command '%s' no found. Use 'help' to see the available commands.\n", tr[0]);
+
 }
 
 // Opens a file with a mode
@@ -132,7 +134,7 @@ void Cmd_open(char *tr[]) {
     }
 
     if (tr[1] == NULL) {
-        printf("Error: No access mode was assigned. Use 'help' for more information.\n");
+        fprintf(stderr, "Error: No access mode was assigned.\n");
         return;
     }
 
@@ -145,13 +147,13 @@ void Cmd_open(char *tr[]) {
         else if (!strcmp(tr[i], "ap")) { mode |= O_APPEND; strcat(modo_str, "a"); }
         else if (!strcmp(tr[i], "tr")) { mode |= O_TRUNC; strcat(modo_str, "t"); }
         else { 
-            printf("Error: Access mode '%s' invalid.\n", tr[i]);
+            fprintf(stderr, "Error: Access mode '%s' invalid.\n", tr[i]);
             return;
         }
     }
 
     if ((df = open(tr[0], mode, 0644)) == -1) {
-        perror("Impossible to open the file");
+        perror("Couldn't open the file");
     } else {
         insertFile(&FILELIST, df, tr[0], modo_str);
         printf("File '%s' opened with descriptor %d with access mode %s.\n", tr[0], df, modo_str);
@@ -160,39 +162,21 @@ void Cmd_open(char *tr[]) {
 
 // Duplicates an open file with its fd
 void Cmd_dup(char *tr[]) {
-    int df, duplicado;
+    int df;
 
-    if (tr[0] == NULL) {
+    if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
+        fprintf(stderr, "use: dup [descriptor]\n");
         printFiles(&FILELIST);
         return;
     }
 
-    if ((strcmp(tr[0], "-?") == 0)) {
-        printf("use: dup [descriptor]\n");
-        return; 
-    }
-
     df = atoi(tr[0]);
     if (df < 0) {
-        printf("Error: Invalid descriptor. Cannot be a negative integer.\n");
+        fprintf(stderr, "Error: Invalid descriptor. Cannot be a negative integer.\n");
         return;
     }
 
-    duplicado = dup(df);
-    if (duplicado == -1) {
-        perror("Error duplicating the file");
-        return;
-    }
-
-    char *fileName = getFileName(&FILELIST, df);
-    if (fileName == NULL) {
-        printf("Couldn't find the file.\n");
-        close(duplicado); 
-        return;
-    }
-    
-    insertFile(&FILELIST, duplicado, fileName, "O_RDWR");
-    printf("Descriptor %d duplicated. New descriptor: %d.\n", df, duplicado);
+    dupFile(&FILELIST, df);
 }
 
 // Closes opened files
@@ -203,29 +187,28 @@ void Cmd_close(char *tr[]) {
         return;
     }
     if ((strcmp(tr[0], "-?") == 0)) {
-        printf("use: close [descriptor]\n");
+        fprintf(stderr, "use: close [descriptor]\n");
         return; 
     }
     df = atoi(tr[0]);
 
     if (tr[0][0] < '0' || tr[0][0] > '9' || df < 0) {
-        printf("Error: Invalid descriptor. Cannot be a negative integer.\n");
+        fprintf(stderr, "Error: Invalid descriptor. Cannot be a negative integer.\n");
         return;
     }
     
     closeFile(&FILELIST,df);
-    
 }
 
 // mkdir
 void Cmd_mkdir(char *tr[]){
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0))
     {
-      printf("use: mkdir [name]\n");
-      return;  
+        fprintf(stderr, "use: mkdir [name]\n");
+        return;  
     }
     if (mkdir(tr[0], 0400 | 0200 | 0100) == -1) {
-        printf("Error trying to create directory: %s\n", strerror(errno));
+        perror("Error trying to create directory: %s\n");
     }
 }
 
@@ -234,11 +217,11 @@ void Cmd_mkfile (char *tr[]){
     int df;
 
     if (tr[0]==NULL || (strcmp(tr[0], "-?") == 0)){
-        printf("use: mkfile [name]");
+        fprintf(stderr, "use: mkfile [name]\n");
         return;  
     }
     if ((df=open(tr[0],O_CREAT | O_RDWR, 0777))==-1){
-        printf("Error creating file: %s\n", strerror(errno));
+        perror("Error creating file");
     }
 }
 
@@ -246,16 +229,19 @@ void Cmd_mkfile (char *tr[]){
 void Cmd_listfile(char *tr[])
 {
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("use: listfile [-long] [-link] [-acc]\n");
+        fprintf(stderr, "use: listfile [-l][-ln][-a]\n");
         return;
     }
+    // modes
     int lng = 0, acc = 0, lnk = 0;
     char *directories[100]; 
     int dirCount = 0;
+
     processAndGetDirectory(tr,directories, &dirCount, NULL, &lng, &acc, &lnk);
+
     if (dirCount==0)
     {
-        perror("At least one directory has to be specified.\n");
+        fprintf(stderr, "use: listfile [-l][-ln][-a]\n");
         return;
     }
     for (int i = 0;i<dirCount ; i++) {
@@ -271,7 +257,7 @@ void Cmd_listdir(char *tr[]){
     int dirCount = 0;
 
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("use: listdir [-hid][-long][-link][-acc]\n");
+        fprintf(stderr, "use: listdir/ls [-h][-l][-ln][-a]\n");
         return;
     }
     processAndGetDirectory(tr,directories, &dirCount, &showHidden, &longFormat, &showAccessTime, &showLink);
@@ -301,7 +287,7 @@ void Cmd_reclist(char *tr[]){
     int dirCount = 0;
 
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("use: reclist [-hid][-long] [-link] [-acc]\n");
+        fprintf(stderr, "use: reclist [-h][-l][-ln][-a]\n");
         return;
     }
     processAndGetDirectory(tr, dirNum, &dirCount, &hid, &lng, &acc, &lnk);
@@ -317,7 +303,7 @@ void Cmd_revlist(char *tr[]){
     char *dirNum[100];
     int dirCount = 0;
     if (tr[0] == NULL || (strcmp(tr[0], "-?") == 0)) {
-        printf("use: revlist [-hid][-long][-link][-acc]\n");
+        fprintf(stderr, "use: revlist [-h][-l][-ln][-a]\n");
         return;
     }
     processAndGetDirectory(tr, dirNum, &dirCount, &hid, &lng, &acc, &lnk);
@@ -519,7 +505,7 @@ void Cmd_setuid(char *tr[]) {
         fprintf(stderr, "use: setuid [-l][uid]\n");
         return;
     }
-    if (tr[1] != NULL && (strcmp(tr[1], "-l") == 0 || strcmp(tr[1], "-L") == 0)) {
+    if (tr[1] != NULL && (strcmp(tr[0], "-l") == 0 || strcmp(tr[0], "-L") == 0)) {
         printf("Login mode detected (-l).\n");
         aux_setuid(tr +1 , 1);
     } else {
@@ -637,7 +623,7 @@ void Cmd_search(char *tr[]){
 
 void Cmd_exec(char *tr[]){
     if (tr[0] == NULL) {
-        fprintf(stderr, "error: a program has not been selected\n");
+        fprintf(stderr, "Error: a program has not been selected\n");
         return;
     }
 
@@ -659,7 +645,7 @@ void Cmd_exec(char *tr[]){
     }
 
     if(program==NULL){
-        fprintf(stderr,"error: a program has not been selected for execution\n");
+        fprintf(stderr,"Error: a program has not been selected for execution\n");
         return;
     }
     if(envCount>0){
@@ -684,64 +670,21 @@ void Cmd_execpri(char *tr[]){
         return;
     }
     char *endptr;
-    int priority = strtol(tr[0], &endptr, 10); // b10
-    if (*endptr != '\0') {
-        fprintf(stderr, "error: priority has to be an integer\n");
-        return;
-    }
+    int prio = strtol(tr[0], &endptr, 10); // b10
 
-    if (priority < -20 || priority > 19) {
-        fprintf(stderr, "error: priority has to be an integer from [-20,19]\n");
-        return;
-    }
-
-    if (priority < 0 && getuid() != 0) {
-        fprintf(stderr, "error: admin privileges are needed for negative priorities\n");
-        return;
-    }
+    aux_isPrioOkay(endptr, prio);
 
     // change prio
-    if (setpriority(PRIO_PROCESS, getpid(), priority) == -1) {
+    if (setpriority(PRIO_PROCESS, getpid(), prio) == -1) {
         fprintf(stderr, "Error changing priority: %s\n", strerror(errno));
         return;
     }
+    char* argv = NULL;
+    char** newEnv = NULL;
 
-    // identify environ var and program
-    char *program = NULL;
-    char **newEnv = NULL;
-    int envCount = 0;
-
-    for (int i = 1; tr[i] != NULL; i++) {
-        if (strchr(tr[i], '=') == NULL && getenv(tr[i]) != NULL) {
-            envCount++;
-        } else {
-            program = tr[i];
-            break;
-        }
-    }
-
-    if (program == NULL) {
-        fprintf(stderr, "Error: A process to run has not been specified.\n");
-        return;
-    }
-
-    // create env if necessary 
-    if (envCount > 0) {
-        newEnv = malloc((envCount + 1) * sizeof(char *));
-        if (newEnv == NULL) {
-            perror("Error: couldn't assign memory to the process\n");
-            return;
-        }
-        int index = 0;
-        for (int i = 1; tr[i] != NULL && index < envCount; i++) {
-            if (getenv(tr[i]) != NULL)
-                newEnv[index++] = strdup(tr[i]);
-        }
-        newEnv[index] = NULL;
-    }
-
+    aux_IfcreateEnv(tr, argv, newEnv, 0);
     // exec process
-    aux_execProgram(program, &tr[1], newEnv);
+    aux_execProgram(argv, &tr[1], newEnv);
 }
 
 void Cmd_fg(char *tr[]){
@@ -749,10 +692,9 @@ void Cmd_fg(char *tr[]){
         fprintf(stderr, "Error: A process to run has not been specified.\n");
         return;
     }
-
     pid_t pid=fork();
     if(pid==-1){
-        perror("Error: couldn't create child process.\n");
+        perror("Couldn't create child process.\n");
         return;
     }
     if(pid==0){
@@ -771,25 +713,19 @@ void Cmd_fgpri(char *tr[]){
     }
 
     char *endptr;
-    int priority = strtol(tr[0], &endptr, 10);
-    if (*endptr != '\0') {
-        fprintf(stderr, "Error: Priority can only be an integer value.\n");
-        return;
-    }
+    int prio = strtol(tr[0], &endptr, 10);
+    
+    aux_isPrioOkay(endptr, prio);
 
-    if (priority < -20 || priority > 19) {
-        fprintf(stderr, "Error: Priority can only be between [-20,19].\n");
-        return;
-    }
     pid_t pid=fork();
     if(pid==-1){
-        perror("Error: couldn't create child process.\n");
+        perror("Couldn't create child process.\n");
         return;
     }
 
     if(pid==0){
         //child
-        if (aux_setChildPriority(priority) == -1) {
+        if (aux_setChildPriority(prio) == -1) {
             exit(EXIT_FAILURE); //failure if prio changes
         }
         aux_execProgram(tr[1], &tr[1], NULL);
@@ -808,7 +744,7 @@ void Cmd_back(char *tr[]) {
     pid_t pid = fork();
     if (pid == 0){
         execvp(tr[0], tr);
-        perror("Couldn't execute the process");
+        perror("Couldn't execute the process\n");
         exit(EXIT_FAILURE);
     } else if(pid > 0){
         addProcess(&PROCLIST, pid, tr[0], ACTIVE, 0);
@@ -832,7 +768,7 @@ void Cmd_backpri(char *tr[]) {
     pid_t pid = fork();
     if (pid == 0){
         if (setpriority(PRIO_PROCESS, getpid(), prio) == -1){
-            perror("Error al establecer prioridad");
+            perror("Couldn't establish priority\n");
             exit(EXIT_FAILURE);
         }
         execvp(tr[1], &tr[1]);
@@ -841,49 +777,45 @@ void Cmd_backpri(char *tr[]) {
         
     } else if (pid > 0){
         addProcess(&PROCLIST, pid, tr[1], ACTIVE, prio);
-        printf("Proceso %d ejecutandose en segundo plano con prioridad %d\n", pid, prio);
+        printf("Process %d executing in the background with priority %d\n", pid, prio);
     } else{
-        perror("Error al crear el proceso hijo");
+        perror("Couldn't create child process.\n");
     }
 
 }
-
 
 void Cmd_listjobs() {
     showProcessList(PROCLIST);
 }
 
-
 void Cmd_deljobs(char *tr[]) {
     if (tr[0] == NULL) {
-        fprintf(stderr, "Uso: deljobs -term|-sig\n");
+        fprintf(stderr, "use: deljobs -term|-sig\n");
         return;
     }
 
     if (strcmp(tr[0], "-term") == 0) {
         deleteProcessByState(&PROCLIST, FINISHED);
-        printf("Procesos terminados eliminados.\n");
+        printf("Finished processes erased succesfully.\n");
     } else if (strcmp(tr[0], "-sig") == 0) {
         deleteProcessByState(&PROCLIST, SIGNALED);
-        printf("Procesos señalizados eliminados.\n");
+        printf("Signaled processes erased succesfully.\n");
     } else {
-        fprintf(stderr, "Error: opción no válida. Usa -term o -sig.\n");
+        fprintf(stderr, "Error: use [-term] or [-sig] as options.\n");
     }
 }
-
 
 void Cmd_external(char *tr[]) {
     pid_t pid = fork();
     if (pid == 0) {
-        // Proceso hijo
+        // son
         execvp(tr[0], tr);
-        perror("Error al ejecutar el programa");
+        perror("Couldn't execute the process");
         exit(EXIT_FAILURE);
     } else if (pid > 0) {
-        // Proceso padre
         waitpid(pid, NULL, 0);
     } else {
-        perror("Error al crear el proceso hijo");
+        perror("Couldn't create child process.\n");
     }
 }
 
@@ -892,8 +824,7 @@ void clearLine(int len) {
 }
 
 
-// definición del array de comandos
-// si ponemos lo que hay en "", vamos a la funcion correspondiente
+// commands and calls
 struct CMD C[] = {
     {"whoisme", Cmd_whoisme},
     {"pid", Cmd_pid},
@@ -947,37 +878,38 @@ struct CMD C[] = {
     {NULL, NULL}
 };
 
-// permite leer y ejecutar el comando
+// reads and executes
 void DoCommand(char *tr[]) {
     int i;
     char command[MAX_COMM] = "";
 
-    if (tr[0] == NULL) { // solo el comando, sin parametros
+    if (tr[0] == NULL) { // command only
         return;
     }
-    for (i = 0; tr[i] != NULL; i++) { // concatena comando con parametros
+    for (i = 0; tr[i] != NULL; i++) { // commands ^ parameters
         strcat(command, tr[i]);
         if (tr[i + 1] != NULL) {
             strcat(command, " ");
         }
     }
-    insertHistoricItem(&HIS, command); // inserta en el historial el comando
-    for (i = 0; C[i].name != NULL; i++) { // comprueba el nombre con lo que tenemos en la funcion del CMD
+    insertHistoricItem(&HIS, command); // adds to list 
+    
+    for (i = 0; C[i].name != NULL; i++) { // checks in CMD
         if (!strcmp(tr[0], C[i].name)) {
             (*C[i].function)(tr + 1);
             return;
         } 
     }
-    printf("sso: command not found: %s \n", tr[0]);//
+    printf("sso: command not found: %s \n", tr[0]);
 }
 
-int funcBreakLine(char *line, char *pz[]) {
+int funcBreakLine(char *line, char *pz[]) { //divides input into parameters
     int i = 1;
     if ((pz[0] = strtok(line, " \n\t")) == NULL)
         return 0;
     while ((pz[i] = strtok(NULL, " \n\t")) != NULL)
         i++;
-    return i;
+    return i; // number of parameters
 }
 
 int main(int argc, char *argv[]) {
