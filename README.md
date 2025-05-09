@@ -14,4 +14,4 @@ Repository for a version of the Linux terminal shell, with commands and explanat
 ## Revision
 
 - read() -> in general
-- setuid() -> make Login working.
+- setuid() -> make Login mod actually work (V)
