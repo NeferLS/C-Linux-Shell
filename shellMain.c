@@ -426,7 +426,7 @@ void Cmd_memory(char *tr[]){
 
 void Cmd_read(char *tr[]){
     if(tr[0]==NULL || tr[1]==NULL || tr[2]==NULL || (strcmp(tr[0], "-?") == 0)){
-        fprintf(stderr, "uso: read [df][memAddrs][nBytes]\n");
+        fprintf(stderr, "use: read [df][memAddrs][nBytes]\n");
         return;
     }
     aux_read(tr);
@@ -468,20 +468,20 @@ void Cmd_writefile(char *tr[]) {
     const char *file=tr[argIndex];
 
     if(file==NULL){
-        fprintf(stderr, "Error: file not specified.\n");
+        fprintf(stderr, "error: file not specified.\n");
         return;
     }
     
     char *endPtr;
     void *addr=(void *)strtoul(tr[1+argIndex],&endPtr,16);
     if(*endPtr!='\0'){
-        fprintf(stderr, "Error: memory address '%s' not valid.\n", tr[argIndex + 1]);
+        fprintf(stderr, "error: memory address '%s' not valid.\n", tr[argIndex + 1]);
         return;
     }
 
     size_t cont= (size_t)strtoul(tr[2+argIndex],&endPtr,10);
     if (*endPtr != '\0' || cont == 0) {
-        fprintf(stderr, "Error: size '%s' not valid.\n", tr[argIndex + 2]);
+        fprintf(stderr, "error: size '%s' not valid.\n", tr[argIndex + 2]);
         return;
     }
 
@@ -496,7 +496,7 @@ void Cmd_recurse(char *tr[]){
 
     int n=atoi(tr[0]);
     if(n<=0){
-        fprintf(stderr, "Error: n should be bigger than 0.\n");
+        fprintf(stderr, "error: n should be bigger than 0.\n");
         return;
     }
 
@@ -562,7 +562,7 @@ void Cmd_changevar(char *tr[]) {
     }
 
     if (aux_changevar(var, val, opt) != 0) {
-        perror("Error trying to change the environ var");
+        perror("error trying to change the environ var");
     }
 }
 
@@ -585,7 +585,7 @@ void Cmd_subsvar(char *tr[]) {
     }
 
     if (aux_subsvar(var1, var2, val) != 0) {
-        perror("Error trying to substitute the environ var");
+        perror("error trying to substitute the environ var");
         return;
     }
 
@@ -721,15 +721,15 @@ void Cmd_execpri(char *tr[]){
     }
 
     if (program == NULL) {
-        fprintf(stderr, "error: No se ha especificado un programa a ejecutar.\n");
+        fprintf(stderr, "Error: A process to run has not been specified.\n");
         return;
     }
 
-    // Crear nuevo entorno si es necesario
+    // create env if necessary 
     if (envCount > 0) {
         newEnv = malloc((envCount + 1) * sizeof(char *));
         if (newEnv == NULL) {
-            perror("Error al asignar memoria para el entorno");
+            perror("Error: couldn't assign memory to the process\n");
             return;
         }
         int index = 0;
@@ -740,109 +740,108 @@ void Cmd_execpri(char *tr[]){
         newEnv[index] = NULL;
     }
 
-    // Ejecutar el programa
+    // exec process
     aux_execProgram(program, &tr[1], newEnv);
 }
 
 void Cmd_fg(char *tr[]){
     if(tr[0]==NULL){
-        fprintf(stderr, "Error: No se ha especificado programa a ejecutar\n");
+        fprintf(stderr, "Error: A process to run has not been specified.\n");
         return;
     }
 
     pid_t pid=fork();
     if(pid==-1){
-        perror("Error al crear el proceso hijo");
+        perror("Error: couldn't create child process.\n");
         return;
     }
     if(pid==0){
-        //proceso hijo: ejecuta programa
+        //child process
         aux_execProgram(tr[0], tr, NULL);
     }else{
-        //proceso padre: esperar al hijo
+        //process
         aux_waitForChild(pid);
     }
 }
 
 void Cmd_fgpri(char *tr[]){
     if (tr[0] == NULL || tr[1] == NULL) {
-        fprintf(stderr, "Uso: fgpri prio prog args...\n");
+        fprintf(stderr, "use: fgpri prio prog args...\n");
         return;
     }
 
     char *endptr;
     int priority = strtol(tr[0], &endptr, 10);
     if (*endptr != '\0') {
-        fprintf(stderr, "Error: La prioridad debe ser un número entero.\n");
+        fprintf(stderr, "Error: Priority can only be an integer value.\n");
         return;
     }
 
     if (priority < -20 || priority > 19) {
-        fprintf(stderr, "Error: La prioridad debe estar entre -20 y 19.\n");
+        fprintf(stderr, "Error: Priority can only be between [-20,19].\n");
         return;
     }
     pid_t pid=fork();
     if(pid==-1){
-        perror("Error al crear el proceso hijo");
+        perror("Error: couldn't create child process.\n");
         return;
     }
 
     if(pid==0){
-        //proceso hijo: ejecuta programa
+        //child
         if (aux_setChildPriority(priority) == -1) {
-            exit(EXIT_FAILURE); // Salir del hijo si falla el cambio de prioridad
+            exit(EXIT_FAILURE); //failure if prio changes
         }
         aux_execProgram(tr[1], &tr[1], NULL);
     }else{
-        //proceso padre: esperar al hijo
+        //process
         aux_waitForChild(pid);
     }
 }
 
 void Cmd_back(char *tr[]) {
    if (tr[0] == NULL) {
-        fprintf(stderr, "Uso: back progspec [args...]\n");
+        fprintf(stderr, "use: back progspec [args...]\n");
         return;
     }
 
     pid_t pid = fork();
     if (pid == 0){
         execvp(tr[0], tr);
-        perror("Error al ejecutar el programa");
+        perror("Couldn't execute the process");
         exit(EXIT_FAILURE);
     } else if(pid > 0){
         addProcess(&PROCLIST, pid, tr[0], ACTIVE, 0);
-        printf("Proceso %d ejecutandose en segundo plano\n", pid);
+        printf("Process %d executing in the background.\n", pid);
     } else{
-        perror("Error al crear el proceso hijo");
+        perror("Couldn't create child process.\n");
     }
 }
 
 void Cmd_backpri(char *tr[]) {
     if (tr[0]== NULL || tr[1]==NULL){
-        fprintf(stderr, "Uso: backpri prio progspec [args...]\n");
+        fprintf(stderr, "use: backpri prio progspec [args...]\n");
         return;
     }
 
-    int priority = atoi(tr[0]);
-    if (priority < -20 || priority >19){
-        fprintf(stderr, "Error: la prioridad debe estar entre -20 y 19.\n");
-        return;
-    }    
+    char *endptr;
+    int prio = strtol(tr[0], &endptr, 10);
+
+    aux_isPrioOkay(endptr, prio);
 
     pid_t pid = fork();
     if (pid == 0){
-        if (setpriority(PRIO_PROCESS, getpid(), priority) == -1){
+        if (setpriority(PRIO_PROCESS, getpid(), prio) == -1){
             perror("Error al establecer prioridad");
             exit(EXIT_FAILURE);
         }
         execvp(tr[1], &tr[1]);
-        perror("Error al ejecutar el programa");
+        perror("Couldn't execute the process");
         exit(EXIT_FAILURE);
         
     } else if (pid > 0){
-        addProcess(&PROCLIST, pid, tr[1], ACTIVE, priority);
-        printf("Proceso %d ejecutandose en segundo plano con prioridad %d\n", pid, priority);
+        addProcess(&PROCLIST, pid, tr[1], ACTIVE, prio);
+        printf("Proceso %d ejecutandose en segundo plano con prioridad %d\n", pid, prio);
     } else{
         perror("Error al crear el proceso hijo");
     }

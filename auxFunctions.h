@@ -49,3 +49,4 @@ void aux_execProgram(char *program, char *args[], char *newEnv[]);
 void aux_waitForChild(pid_t pid);
 int aux_setChildPriority(int priority);
 int readKey();
+void aux_isPrioOkay(char *endptr, int prio);
